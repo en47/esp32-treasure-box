@@ -1,0 +1,1126 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>電子密碼寶盒 · 實體概念動畫</title>
+<style>
+:root{--ink:#2b2838;--muted:#7a7590;--accent:#7b6cc4;--line:#ddd6ee;}
+*{box-sizing:border-box}
+html,body{margin:0;min-height:100%;background:#e9e5f1;color:var(--ink);
+  font-family:"PingFang TC","Noto Sans TC","Microsoft JhengHei","Heiti TC",system-ui,-apple-system,sans-serif;}
+body{display:flex;flex-direction:column;align-items:center;gap:10px;padding:10px;}
+.stage{width:min(100%, calc((100vh - 150px) * 16 / 9));min-width:min(100%,560px);aspect-ratio:16/9;position:relative;
+  border-radius:18px;overflow:hidden;box-shadow:0 12px 40px rgba(70,50,120,.16);background:#f7f4fb;}
+body.clean .stage{width:min(100%, calc((100vh - 20px) * 16 / 9));}
+.stage svg{position:absolute;inset:0;width:100%;height:100%;display:block;
+  font-family:"PingFang TC","Noto Sans TC","Microsoft JhengHei","Heiti TC",system-ui,-apple-system,sans-serif;}
+.mono{font-family:"SF Mono","Menlo","Consolas","Roboto Mono",monospace;}
+svg.manual [data-act]{cursor:pointer}
+[data-act="reveal"]{cursor:pointer}
+.bar{width:min(100%, calc((100vh - 150px) * 16 / 9));min-width:min(100%,560px);background:#fff;border:1px solid var(--line);
+  border-radius:16px;padding:10px 12px;display:flex;flex-direction:column;gap:8px;box-shadow:0 4px 18px rgba(70,50,120,.08)}
+body.clean .bar{display:none}
+.row{display:flex;flex-wrap:wrap;align-items:center;gap:8px}
+.row.hidden{display:none}
+.spacer{flex:1}
+button,select{font:inherit;font-size:14px;border:1px solid var(--line);background:#f6f4fb;color:var(--ink);
+  border-radius:10px;padding:7px 12px;cursor:pointer;transition:background .15s,transform .05s}
+button:hover{background:#ece8f7}
+button:active{transform:translateY(1px)}
+button:disabled{opacity:.45;cursor:not-allowed}
+button.primary{background:var(--accent);border-color:var(--accent);color:#fff;font-weight:700}
+button.primary:hover{background:#6a5bb5}
+button.green{background:#38a865;border-color:#38a865;color:#fff;font-weight:700}
+button.green:hover{background:#2f9257}
+.tabs{display:flex;background:#f1eef8;border-radius:12px;padding:3px}
+.tab{border:none;background:transparent;font-weight:600;color:var(--muted)}
+.tab.on{background:#fff;color:var(--ink);box-shadow:0 1px 4px rgba(0,0,0,.08)}
+label{font-size:14px;color:var(--muted);display:flex;align-items:center;gap:6px}
+.guess{display:flex;align-items:center;border:1px solid var(--line);border-radius:10px;overflow:hidden;background:#fff}
+.guess b{padding:0 8px;color:var(--accent);font-family:"SF Mono",Menlo,Consolas,monospace}
+.guess input{border:none;outline:none;font:15px "SF Mono",Menlo,Consolas,monospace;width:84px;padding:7px 6px 7px 0;letter-spacing:2px}
+.hint{font-size:13px;color:var(--muted)}
+.hint.err{color:#c9473d}
+.hint.ok{color:#2f9257}
+</style>
+</head>
+<body>
+
+<div class="stage" id="stage">
+<svg id="svg" viewBox="0 0 1600 900" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bgG" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#fcfbfe"/><stop offset=".55" stop-color="#f2eef9"/><stop offset="1" stop-color="#e6e0f2"/>
+    </linearGradient>
+    <radialGradient id="spot" cx=".5" cy=".5" r=".5">
+      <stop offset="0" stop-color="#ffffff" stop-opacity=".95"/><stop offset="1" stop-color="#ffffff" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="underGlow" cx=".5" cy=".5" r=".5">
+      <stop offset="0" stop-color="#a99ae0" stop-opacity=".55"/><stop offset="1" stop-color="#a99ae0" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="sheen" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#fff" stop-opacity=".26"/><stop offset=".5" stop-color="#fff" stop-opacity="0"/><stop offset="1" stop-color="#000" stop-opacity=".05"/>
+    </linearGradient>
+    <linearGradient id="acrylic" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#dfe9f7" stop-opacity=".30"/><stop offset=".5" stop-color="#c9d8ee" stop-opacity=".12"/><stop offset="1" stop-color="#b9c9e4" stop-opacity=".26"/>
+    </linearGradient>
+    <radialGradient id="btnTop" cx=".4" cy=".35" r=".7">
+      <stop offset="0" stop-color="#8ef0b0"/><stop offset=".6" stop-color="#3fbf6e"/><stop offset="1" stop-color="#2a9356"/>
+    </radialGradient>
+    <radialGradient id="ledGlow" cx=".5" cy=".5" r=".5">
+      <stop offset="0" stop-color="#ff5a4e" stop-opacity=".95"/><stop offset=".3" stop-color="#ff6a5e" stop-opacity=".45"/><stop offset="1" stop-color="#ff6a5e" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="espGlow" cx=".5" cy=".5" r=".5">
+      <stop offset="0" stop-color="#5aa0ff" stop-opacity=".9"/><stop offset="1" stop-color="#5aa0ff" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="phoneBody" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#e4e0ee"/><stop offset=".5" stop-color="#c9c3d9"/><stop offset="1" stop-color="#b3acc6"/>
+    </linearGradient>
+    <linearGradient id="appIcon" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#a596e6"/><stop offset="1" stop-color="#6e5ec0"/>
+    </linearGradient>
+    <filter id="blur14" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="14"/></filter>
+    <filter id="blur5" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="5"/></filter>
+    <clipPath id="insetClip"><rect x="48" y="576" width="240" height="220" rx="6"/></clipPath>
+    <clipPath id="logClip"><rect x="0" y="220" width="262" height="320"/></clipPath>
+  </defs>
+
+  <rect width="1600" height="900" fill="url(#bgG)"/>
+  <ellipse cx="620" cy="720" rx="560" ry="190" fill="url(#spot)"/>
+
+  <!-- 標題 -->
+  <g>
+    <text x="44" y="56" font-size="30" font-weight="800" fill="#2b2838" letter-spacing="1">電子密碼寶盒</text>
+    <text x="44" y="82" font-size="13.5" fill="#7a7590" letter-spacing=".5">Electronic Password Treasure Box · 實體成品概念動畫</text>
+  </g>
+
+  <g id="statusL"></g>
+  <g id="boxL"></g>
+  <g id="labelsL"></g>
+  <g id="fxL"></g>
+  <g id="insetL"></g>
+  <g id="phoneL"></g>
+  <g id="pktL"></g>
+  <g id="bannerL"></g>
+  <g id="capL"></g>
+</svg>
+</div>
+
+<div class="bar" id="bar">
+  <div class="row">
+    <div class="tabs">
+      <button class="tab on" id="tabDemo">自動展示 Demo</button>
+      <button class="tab" id="tabMan">手動互動 Interactive</button>
+    </div>
+    <span class="spacer"></span>
+    <label>速度
+      <select id="speed">
+        <option value="0.5">0.5x</option><option value="1" selected>1x</option>
+        <option value="1.5">1.5x</option><option value="2">2x</option>
+      </select>
+    </label>
+    <button id="btnMute">🔊 音效：開</button>
+    <button id="btnXray">剖面透視：關</button>
+    <button id="btnHide" title="快捷鍵 H">隱藏控制列 (H)</button>
+  </div>
+
+  <div class="row" id="demoPanel">
+    <button class="primary" id="btnPlay">▶ PLAY DEMO</button>
+    <button id="btnReplay">↺ 重新播放</button>
+    <label><input type="checkbox" id="chkLoop"> 循環播放</label>
+    <label>流程
+      <select id="script">
+        <option value="all">完整流程 Scene 1–7</option>
+        <option value="main">解謎流程 Scene 1–6</option>
+        <option value="giveup">放棄機制 Scene 7（獨立）</option>
+      </select>
+    </label>
+    <span class="hint">Demo Mode：固定示範密碼 1234（不顯示於手機）· 空白鍵 播放/暫停</span>
+  </div>
+
+  <div class="row hidden" id="manPanel">
+    <button data-m="connect">Connect BLE</button>
+    <button data-m="NEW">NEW</button>
+    <span class="guess"><b>P</b><input id="guessIn" maxlength="6" inputmode="numeric" placeholder="1234" autocomplete="off"></span>
+    <button class="primary" data-m="guess">Guess</button>
+    <button data-m="STATUS">STATUS</button>
+    <button data-m="LOCK">LOCK</button>
+    <button class="green" data-m="giveup">Give Up 實體按鈕</button>
+    <button data-m="lid" id="btnLid">Open Lid</button>
+    <button data-m="reset">Reset</button>
+    <span class="hint" id="manHint">Interactive Mode：ESP32 隨機產生四位不重複密碼</span>
+  </div>
+</div>
+
+<script>
+'use strict';
+/* =====================================================================
+   電子密碼寶盒 · 實體概念動畫
+   結構：
+   1. 幾何常數（可調整機構尺寸）      2. 2.5D 投影引擎
+   3. 寶盒/零件繪製                   4. 時間線引擎（Lane / Director）
+   5. 韌體邏輯（對應 MicroPython）    6. 手機 BLE、Demo 腳本
+   7. 畫面渲染、音效、UI 綁定
+   所有動畫皆由單一 requestAnimationFrame 迴圈 + 虛擬時鐘驅動，
+   暫停 = 時鐘停止，重播 = 重新建立狀態，不使用 setTimeout 排程。
+   ===================================================================== */
+
+/* ---------- 1. 幾何常數（單位約為 mm） ---------- */
+const GEO = {
+  W: 220, D: 150, H: 110,   // 盒身 寬 / 深 / 高
+  T: 28,                    // 盒蓋厚度
+  t: 6,                     // 壁厚
+  LID_MAX: 100 * Math.PI/180,           // 盒蓋最大開啟角
+  // 伺服馬達：轉軸朝前（-y），鎖臂在 x-z 平面旋轉
+  servo: { xs: 96, zs: 52, len: 26 },   // 轉軸位置、鎖臂長度
+  // 鎖鉤（固定在盒蓋下方）：垂直板 + 向左伸出的鉤唇
+  tab: { a: [126, 34, 38.5], b: [134, 40, 110] },
+  lip: { a: [112, 34, 38.5], b: [134, 49, 45.5] },
+  GAP: 3                    // 鉤唇與鎖臂下緣的間隙
+};
+// 上鎖時盒蓋最多只能抬起的角度：鉤唇上升 GAP 即碰到鎖臂
+const BLOCK_LIFT = GEO.GAP / (GEO.D - 42);
+// 動畫時長（ms，1x 速度），方便調整
+const TIMING = { servo: 650, lidOpen: 1900, lidClose: 1600, packet: 420, autoLock: 5000 };
+
+const C = { cream:'#f4efe5', inner:'#e8e0d2', lid:'#cfc5ec', felt:'#7a68bf', wood:'#d9b88b',
+  servo:'#3f7de0', arm:'#f2a650', metal:'#a9b2bf', pcb:'#1e2733', bracket:'#e7e2d7', accent:'#7b6cc4' };
+
+/* ---------- 2. 2.5D 投影引擎 ---------- */
+// x：向右、y：向後（深度）、z：向上。平行投影，因此任何平面都可用一個 SVG matrix 精確表示。
+const PJ = { S: 1.9, ox: 330, oy: 705, ex: [0.961, 0.276], ey: [0.53, -0.36] };
+const f = n => Math.round(n * 100) / 100;
+const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+const dot3 = (a, b) => a[0]*b[0] + a[1]*b[1] + a[2]*b[2];
+const norm3 = v => { const l = Math.hypot(v[0], v[1], v[2]); return v.map(x => x / l); };
+function P(x, y, z){ return [PJ.ox + (x*PJ.ex[0] + y*PJ.ey[0]) * PJ.S, PJ.oy + (x*PJ.ex[1] + y*PJ.ey[1] - z) * PJ.S]; }
+function PV(v){ return [(v[0]*PJ.ex[0] + v[1]*PJ.ey[0]) * PJ.S, (v[0]*PJ.ex[1] + v[1]*PJ.ey[1] - v[2]) * PJ.S]; }
+// 平面座標系 → SVG matrix；det > 0 代表該面朝向觀看者（用於背面剔除）
+function M(o, u, v){
+  const O = P(o[0], o[1], o[2]), U = PV(u), V = PV(v);
+  return { s: `matrix(${f(U[0])} ${f(U[1])} ${f(V[0])} ${f(V[1])} ${f(O[0])} ${f(O[1])})`, det: U[0]*V[1] - U[1]*V[0] };
+}
+const AX = [1,0,0], AY = [0,1,0], NY = [0,-1,0], NZ = [0,0,-1];
+const ID = { p: q => q, v: q => q };
+// 盒蓋變換：繞後方鉸鏈軸（平行 x 軸，位於 y=D, z=H）旋轉 th 弧度
+function lidXf(th){
+  const c = Math.cos(th), s = Math.sin(th), D = GEO.D, H = GEO.H;
+  return {
+    p: q => { const dy = q[1] - D, dz = q[2] - H; return [q[0], D + dy*c + dz*s, H - dy*s + dz*c]; },
+    v: q => [q[0], q[1]*c + q[2]*s, -q[1]*s + q[2]*c]
+  };
+}
+const LIGHT = norm3([0.25, -0.6, 1]);
+function hex2rgb(h){ h = h.replace('#',''); return [0,2,4].map(i => parseInt(h.slice(i, i+2), 16)); }
+function shade(hex, n){
+  const d = Math.max(0, dot3(n, LIGHT)), k = 0.70 + 0.34 * d;
+  return 'rgb(' + hex2rgb(hex).map(c => Math.min(255, Math.round(c * k))).join(',') + ')';
+}
+function plane(o, u, v, inner, xf = ID, cull = false){
+  const m = M(xf.p(o), xf.v(u), xf.v(v));
+  if (cull && m.det <= 0) return '';
+  return `<g transform="${m.s}">${inner}</g>`;
+}
+// 長方體六個面：u 為面上「右」、v 為面上「下」（自外側看）
+function cuboidFaces(a, b){
+  const [x0,y0,z0] = a, [x1,y1,z1] = b;
+  return [
+    { k:'front',  o:[x0,y0,z1], u:[1,0,0],  v:[0,0,-1], w:x1-x0, h:z1-z0, n:[0,-1,0] },
+    { k:'back',   o:[x1,y1,z1], u:[-1,0,0], v:[0,0,-1], w:x1-x0, h:z1-z0, n:[0,1,0] },
+    { k:'right',  o:[x1,y0,z1], u:[0,1,0],  v:[0,0,-1], w:y1-y0, h:z1-z0, n:[1,0,0] },
+    { k:'left',   o:[x0,y1,z1], u:[0,-1,0], v:[0,0,-1], w:y1-y0, h:z1-z0, n:[-1,0,0] },
+    { k:'top',    o:[x0,y1,z1], u:[1,0,0],  v:[0,-1,0], w:x1-x0, h:y1-y0, n:[0,0,1] },
+    { k:'bottom', o:[x0,y0,z0], u:[1,0,0],  v:[0,1,0],  w:x1-x0, h:y1-y0, n:[0,0,-1] }
+  ];
+}
+// 凸多面體只畫朝前的面即可得到正確遮擋
+function cuboid(a, b, o = {}){
+  const xf = o.xf || ID; let s = '';
+  for (const F of cuboidFaces(a, b)){
+    const m = M(xf.p(F.o), xf.v(F.u), xf.v(F.v));
+    if (m.det <= 1e-6) continue;
+    const n = xf.v(F.n);
+    const col = (o.colors && o.colors[F.k]) || o.color;
+    const op = o.faceOp != null ? o.faceOp : 1;
+    s += `<g transform="${m.s}"><rect width="${f(F.w)}" height="${f(F.h)}" fill="${shade(col, n)}"` +
+         (op < 1 ? ` fill-opacity="${f(op)}"` : '') +
+         ` stroke="${o.stroke || 'rgba(45,35,80,.30)'}" stroke-width="${o.sw || 0.9}" vector-effect="non-scaling-stroke"/>`;
+    if (o.sheen !== false) s += `<rect width="${f(F.w)}" height="${f(F.h)}" fill="url(#sheen)" opacity="${f(op)}"/>`;
+    if (o.deco && o.deco[F.k]) s += `<g opacity="${f(o.decoOp != null ? o.decoOp : 1)}">${o.deco[F.k](F.w, F.h)}</g>`;
+    s += '</g>';
+  }
+  return s;
+}
+const rr = (x, y, w, h, r) => `M${x+r} ${y}H${x+w-r}A${r} ${r} 0 0 1 ${x+w} ${y+r}V${y+h-r}A${r} ${r} 0 0 1 ${x+w-r} ${y+h}H${x+r}A${r} ${r} 0 0 1 ${x} ${y+h-r}V${y+r}A${r} ${r} 0 0 1 ${x+r} ${y}Z`;
+const NSS = 'vector-effect="non-scaling-stroke"';
+
+/* ---------- 3. 寶盒與零件繪製 ---------- */
+// 沿 y 軸、朝前的圓柱（以多層圓片堆疊表現厚度）
+function cylY(cx, cz, r, yBack, yFront, side, face, extra = ''){
+  let s = ''; const n = Math.max(2, Math.ceil((yBack - yFront) / 0.7));
+  for (let i = 0; i < n; i++){ const y = yBack - (yBack - yFront) * i / n;
+    s += plane([0,y,0], AX, NZ, `<circle cx="${cx}" cy="${-cz}" r="${r}" fill="${side}"/>`); }
+  s += plane([0,yFront,0], AX, NZ, `<circle cx="${cx}" cy="${-cz}" r="${r}" fill="${face}" stroke="rgba(0,0,0,.25)" stroke-width=".8" ${NSS}/>${extra}`);
+  return s;
+}
+function wire(pts, col, w = 1.6){
+  return `<polyline points="${pts.map(p => P(p[0],p[1],p[2]).map(f).join(',')).join(' ')}" fill="none" stroke="${col}" stroke-width="${w}" stroke-linecap="round" stroke-linejoin="round"/>`;
+}
+
+function drawShadow(){
+  const pts = [P(-6,-6,-10), P(226,-6,-10), P(226,156,-10), P(-6,156,-10)].map(p => [p[0]+10, p[1]+12]);
+  const glow = 0.18 + 0.07 * Math.sin(performance.now() / 900);   // 待機呼吸光
+  const c = P(110, 75, -10);
+  return `<ellipse cx="${f(c[0]+10)}" cy="${f(c[1]+8)}" rx="330" ry="95" fill="url(#underGlow)" opacity="${f(glow)}"/>` +
+    `<polygon points="${pts.map(p => p.map(f).join(',')).join(' ')}" fill="rgba(55,35,100,.28)" filter="url(#blur14)"/>`;
+}
+function drawBase(){
+  const grain = (w, h) => `<path d="M0 ${h*.35}H${w} M0 ${h*.7}H${w*.6} M${w*.65} ${h*.62}H${w}" stroke="rgba(120,80,40,.22)" stroke-width=".8" ${NSS} fill="none"/>`;
+  return cuboid([-6,-6,-10], [226,156,0], { color: C.wood, deco: { front: grain, right: grain } });
+}
+function drawInterior(){
+  const { W, D, H, t } = GEO; let s = '';
+  s += plane([t, D-t, 6], AX, NY, `<rect width="${W-2*t}" height="${D-2*t}" fill="${shade(C.inner,[0,0,1])}"/>`);
+  s += plane([t, D-t, H], AX, NZ, `<rect width="${W-2*t}" height="${H-6}" fill="${shade(C.inner,[0,-1,0])}"/>` +
+       `<rect width="${W-2*t}" height="${H-6}" fill="url(#sheen)"/>`);
+  s += plane([t, t, H], AY, NZ, `<rect width="${D-2*t}" height="${H-6}" fill="${shade(C.inner,[1,0,0])}"/>`);
+  return s;
+}
+function espTop(){
+  let s = `<path d="M3 2.5H25M3 2.5V6.5H7V3.8H11V6.5H15V3.8H19V6.5H23V3.8" fill="none" stroke="#caa54c" stroke-width=".7"/>`;
+  for (let i = 0; i < 15; i++){ const v = f(13 + i * 2.85);
+    s += `<circle cx="1.8" cy="${v}" r=".8" fill="#dcb95e"/><circle cx="26.2" cy="${v}" r=".8" fill="#dcb95e"/>`; }
+  s += `<rect x="6" y="48" width="3.4" height="2.6" rx=".4" fill="#ddd"/><rect x="18.6" y="48" width="3.4" height="2.6" rx=".4" fill="#ddd"/>` +
+       `<circle cx="14" cy="45" r=".9" fill="#ff5050"/><text x="14" y="40" font-size="2.6" fill="#c9d2e2" text-anchor="middle">ESP32 DEVKIT</text>`;
+  return s;
+}
+function drawESP32(){
+  let s = plane([0,0,6.05], AX, NY, `<rect x="21" y="-123" width="31" height="58" rx="2" fill="rgba(0,0,0,.18)"/>`);
+  for (const [x,y] of [[24,68],[48,68],[24,120],[48,120]]) s += cuboid([x-1,y-1,6],[x+1,y+1,10],{color:'#c9c1b3',sheen:false});
+  s += cuboid([22,66,10], [50,122,11.6], { color: C.pcb, deco: { top: espTop } });
+  s += cuboid([25,92,11.6], [47,112,14.2], { color: '#c8cdd5',
+    deco: { top: (w,h) => `<text x="${w/2}" y="${h/2+1.5}" font-size="4.2" font-weight="700" fill="#556" text-anchor="middle">ESP32</text><text x="${w/2}" y="${h/2+6}" font-size="2.4" fill="#667" text-anchor="middle">WROOM-32</text>` } });
+  s += cuboid([31,63.5,11.6], [41,69,14.4], { color: '#b9bec6' });
+  return s;
+}
+function drawWires(){
+  let s = '';
+  // SG90 排線：GND(棕) / 5V(紅) / 訊號 GPIO18(橘)
+  ['#6b4a2e', '#e04848', '#f08a24'].forEach((c, i) => { const o = i * 1.6;
+    s += wire([[85+o,77,50],[85+o,88,34],[70,92+o,7.6],[48.2,94+o*1.3,11.9]], c, 1.5); });
+  // LED：GPIO25（黃，經限流電阻）+ GND
+  s += wire([[23.8,86,11.9],[14,80,7.4],[14,40,7.4],[20,10,7.4],[33,7,12],[34,7,84]], '#e6c229');
+  s += wire([[23.8,82,11.9],[16.6,76,7.4],[16.6,40,7.4],[22,11,7.4],[38,7,12],[38,7,84]], '#2b2b2b');
+  const r0 = P(14,64,7.8), r1 = P(14,50,7.8);
+  s += `<line x1="${f(r0[0])}" y1="${f(r0[1])}" x2="${f(r1[0])}" y2="${f(r1[1])}" stroke="#d8c59c" stroke-width="5" stroke-linecap="round"/>`;
+  [0.3,0.45,0.6].forEach((k,i) => { const p = [r0[0]+(r1[0]-r0[0])*k, r0[1]+(r1[1]-r0[1])*k];
+    s += `<circle cx="${f(p[0])}" cy="${f(p[1])}" r="2.2" fill="${['#a0522d','#111','#d23'][i]}"/>`; });
+  // 按鈕：GPIO32（綠）+ GND
+  s += wire([[23.8,78,11.9],[10,72,7.4],[10,24,7.4],[28,8,7.4],[33,7,40]], '#3db36b');
+  s += wire([[23.8,74,11.9],[11.6,70,7.4],[11.6,26,7.4],[30,10,7.4],[39,7,40]], '#2b2b2b');
+  // 蜂鳴器：GPIO27（紫）+ GND
+  s += wire([[48.2,108,11.9],[62,114,7.4],[180,114,7.4],[192,108,9]], '#8a5cd6');
+  s += wire([[48.2,104,11.9],[64,111,7.4],[182,111,7.4],[197,100,9]], '#2b2b2b');
+  return s;
+}
+function drawBuzzer(){
+  let s = '';
+  for (let z = 6; z < 16; z += 0.8) s += plane([0,0,z], AX, NY, `<circle cx="196" cy="-105" r="7" fill="${z < 9 ? '#141419' : '#1f1f27'}"/>`);
+  s += plane([0,0,16], AX, NY, `<circle cx="196" cy="-105" r="7" fill="#2e2e38" stroke="#000" stroke-opacity=".4" stroke-width=".8" ${NSS}/>` +
+    `<circle cx="196" cy="-105" r="1.7" fill="#0b0b0f"/><text x="191" y="-107" font-size="3" fill="#ddd">+</text>`);
+  return s;
+}
+function drawServo(){
+  const { xs, zs } = GEO.servo; let s = '';
+  // 3D 列印支架（固定在盒底）
+  s += cuboid([76,57,6], [105,76,46], { color: C.bracket,
+    deco: { front: (w,h) => `<circle cx="5" cy="${h-6}" r="1.4" fill="#aaa"/><circle cx="${w-5}" cy="${h-6}" r="1.4" fill="#aaa"/>` } });
+  // SG90 本體（23 × 12 × 22.5 mm）
+  s += cuboid([79,55,46], [102,77,58], { color: C.servo,
+    deco: { top: (w,h) => `<rect x="2" y="4" width="${w-4}" height="${h-8}" rx="1.5" fill="rgba(255,255,255,.16)"/><text x="${w/2}" y="${h/2+1.5}" font-size="4.6" font-weight="800" fill="#fff" text-anchor="middle">SG90</text><text x="${w/2}" y="${h/2+6}" font-size="2.4" fill="#dfe8ff" text-anchor="middle">9g SERVO</text>` } });
+  s += cylY(xs, zs, 5.6, 55, 52.6, '#2d62bf', '#4c8ae9');       // 齒輪箱凸台
+  s += cylY(xs, zs, 3.9, 52.6, 49.2, '#cfcfcf', '#f6f6f6');      // 輸出軸 / 舵盤
+  // 鎖臂（固定在舵盤上，隨馬達角度旋轉）
+  const a = S.servo;
+  const d = `M${xs} ${-zs-3.5}L${xs+23} ${-zs-3}A3 3 0 0 1 ${xs+23} ${-zs+3}L${xs} ${-zs+3.5}A3.5 3.5 0 0 1 ${xs} ${-zs-3.5}Z`;
+  const g = (fill, extra = '') => `<g transform="rotate(${f(-a)} ${xs} ${-zs})"><path d="${d}" fill="${fill}"/>${extra}</g>`;
+  for (const y of [49, 48.2, 47.4, 46.7]) s += plane([0,y,0], AX, NZ, g('#c77a2c'));
+  s += plane([0,46,0], AX, NZ, g(C.arm, `<path d="${d}" fill="url(#sheen)"/><path d="${d}" fill="none" stroke="rgba(120,60,10,.45)" stroke-width=".8" ${NSS}/><circle cx="${xs}" cy="${-zs}" r="1.5" fill="#8b8f98"/><circle cx="${xs+21}" cy="${-zs}" r="1" fill="#b56a22"/>`));
+  return s;
+}
+// 鎖鉤（屬於盒蓋，隨盒蓋旋轉）
+function drawHook(xf, openView){
+  const lip = cuboid(GEO.lip.a, GEO.lip.b, { color: '#9aa4b3', xf });
+  const tab = cuboid(GEO.tab.a, GEO.tab.b, { color: C.metal, xf });
+  return openView ? tab + lip : lip + tab;
+}
+const WIN = { x: 98, y: 6, w: 74, h: 58, r: 5 };   // 前方壓克力觀察窗（前面板座標）
+function drawOuterWalls(xr){
+  const { W, D, H, t } = GEO; const fo = 1 - 0.8 * xr; let s = '';
+  // 右側面：蜂鳴器出音孔
+  let grille = '';
+  for (let r = 0; r < 3; r++) for (let c = 0; c < 5; c++) grille += `<circle cx="${97+c*4}" cy="${86+r*5}" r="1.5" fill="#4b4558" opacity=".75"/>`;
+  s += plane([W,0,H], AY, NZ,
+    `<rect width="${D}" height="${H}" fill="${shade(C.cream,[1,0,0])}" fill-opacity="${f(fo)}"/>` +
+    `<rect width="${D}" height="${H}" fill="url(#sheen)" opacity="${f(fo)}"/>` +
+    `<rect width="${D}" height="${H}" fill="none" stroke="rgba(45,35,80,.35)" stroke-width="1" ${NSS}/>` +
+    grille + `<text x="105" y="81" font-size="3.6" fill="#6f6880" text-anchor="middle" letter-spacing=".6">BUZZER</text>`);
+  // 前面板：觀察窗、LED、放棄按鈕
+  const holeD = `M0 0H${W}V${H}H0Z` + rr(WIN.x, WIN.y, WIN.w, WIN.h, WIN.r);
+  s += plane([0,0,H], AX, NZ,
+    `<path d="${holeD}" fill-rule="evenodd" fill="${shade(C.cream,[0,-1,0])}" fill-opacity="${f(fo)}"/>` +
+    `<path d="${holeD}" fill-rule="evenodd" fill="url(#sheen)" opacity="${f(fo)}"/>` +
+    `<rect width="${W}" height="${H}" fill="none" stroke="rgba(45,35,80,.35)" stroke-width="1" ${NSS}/>` +
+    `<path d="${rr(WIN.x, WIN.y, WIN.w, WIN.h, WIN.r)}" fill="url(#acrylic)"/>` +
+    `<path d="${rr(WIN.x, WIN.y, WIN.w, WIN.h, WIN.r)}" fill="none" stroke="#6d6680" stroke-width="2.2" stroke-opacity=".75"/>` +
+    `<path d="M${WIN.x+10} ${WIN.y+WIN.h-2}L${WIN.x+30} ${WIN.y+2}M${WIN.x+18} ${WIN.y+WIN.h-2}L${WIN.x+34} ${WIN.y+14}" stroke="#fff" stroke-opacity=".45" stroke-width="1.4" ${NSS}/>` +
+    [[WIN.x-3.5,WIN.y+4],[WIN.x+WIN.w+3.5,WIN.y+4],[WIN.x-3.5,WIN.y+WIN.h-4],[WIN.x+WIN.w+3.5,WIN.y+WIN.h-4]].map(p => `<circle cx="${p[0]}" cy="${p[1]}" r="1.3" fill="#9a93aa"/>`).join('') +
+    `<circle cx="36" cy="24" r="7" fill="#d4d7de" stroke="#8b8fa0" stroke-width=".8" ${NSS}/>` +
+    `<text x="36" y="38" font-size="4" fill="#6f6880" text-anchor="middle" letter-spacing=".5">STATUS</text>` +
+    `<circle cx="36" cy="68" r="10" fill="#2d2f36"/><circle cx="36" cy="68" r="10" fill="none" stroke="#9aa" stroke-width=".6" ${NSS}/>` +
+    `<text x="36" y="86" font-size="4" fill="#6f6880" text-anchor="middle" letter-spacing=".5">GIVE UP</text>` +
+    `<text x="${WIN.x+WIN.w/2}" y="${WIN.y+WIN.h+14}" font-size="5" fill="#8a8398" text-anchor="middle" letter-spacing="1.4" font-weight="700">TREASURE BOX</text>` +
+    `<text x="${WIN.x+WIN.w/2}" y="${WIN.y+WIN.h+21}" font-size="3.3" fill="#a59fb2" text-anchor="middle" letter-spacing=".8">ESP32 · BLE · SG90 LOCK</text>`);
+  // 上緣框（四面牆頂）
+  s += plane([0,D,H], AX, NY, `<path d="M0 0H${W}V${D}H0Z M${t} ${t}V${D-t}H${W-t}V${t}Z" fill-rule="evenodd" fill="${shade(C.cream,[0,0,1])}" stroke="rgba(45,35,80,.25)" stroke-width=".8" ${NSS}/>`);
+  return s;
+}
+// 凸出前面板的 LED 燈罩與按鈕帽（多層堆疊呈現厚度）
+function drawFrontBits(){
+  let s = '';
+  const ledCol = S.led ? '#ff5446' : '#8e3c37';
+  for (let i = 0; i <= 3; i++){ const y = -2.2 * i / 3;
+    s += plane([0,y,0], AX, NZ, `<circle cx="36" cy="-86" r="4.4" fill="${i === 3 ? ledCol : (S.led ? '#d63a2f' : '#6d2c28')}"/>` +
+      (i === 3 ? `<circle cx="34.6" cy="-87.6" r="1.3" fill="#fff" opacity=".7"/>` : '')); }
+  const p = 3.4 * (1 - 0.85 * S.press);
+  for (let i = 0; i <= 5; i++){ const y = -p * i / 5;
+    s += plane([0,y,0], AX, NZ, `<circle cx="36" cy="-42" r="7" fill="${i === 5 ? 'url(#btnTop)' : '#258a4d'}"/>` +
+      (i === 5 ? `<circle cx="33.5" cy="-44.5" r="2.2" fill="#fff" opacity=".35"/>` : '')); }
+  return s;
+}
+function drawHinges(){
+  const { D, H } = GEO; let s = '';
+  for (const [x0, x1] of [[28,58],[162,192]]){
+    const a = P(x0, D+3, H), b = P(x1, D+3, H);
+    s += `<line x1="${f(a[0])}" y1="${f(a[1])}" x2="${f(b[0])}" y2="${f(b[1])}" stroke="#8f97a5" stroke-width="13"/>`;
+    s += `<line x1="${f(a[0])}" y1="${f(a[1]-3)}" x2="${f(b[0])}" y2="${f(b[1]-3)}" stroke="#d7dce4" stroke-width="3"/>`;
+    for (const k of [0.33, 0.66]){ const m = [a[0]+(b[0]-a[0])*k, a[1]+(b[1]-a[1])*k];
+      s += `<line x1="${f(m[0])}" y1="${f(m[1]-6)}" x2="${f(m[0]+1)}" y2="${f(m[1]+6)}" stroke="#6f7684" stroke-width="1"/>`; }
+    s += plane([x1,0,0], AY, NZ, `<circle cx="${D+3}" cy="${-H}" r="3.5" fill="#b7bec9" stroke="#6f7684" stroke-width=".8" ${NSS}/><circle cx="${D+3}" cy="${-H}" r="1" fill="#6f7684"/>`);
+  }
+  return s;
+}
+function drawLid(xf, xr){
+  const { W, D, H, T } = GEO; const op = 1 - 0.55 * xr;
+  return cuboid([0,0,H], [W,D,H+T], { color: C.lid, xf, faceOp: op, decoOp: op, deco: {
+    top: (w,h) => `<rect x="14" y="14" width="${w-28}" height="${h-28}" rx="10" fill="none" stroke="rgba(255,255,255,.6)" stroke-width="1.2" ${NSS}/>` +
+      `<rect x="17" y="17" width="${w-34}" height="${h-34}" rx="8" fill="none" stroke="rgba(90,70,150,.18)" stroke-width="1" ${NSS}/>` +
+      `<g transform="translate(${w/2} ${h/2-8})"><circle r="17" fill="rgba(255,255,255,.32)" stroke="rgba(90,70,150,.3)" stroke-width="1" ${NSS}/>` +
+      `<path d="M-6 -2V-7A6 6 0 0 1 6 -7V-2" fill="none" stroke="rgba(90,70,150,.55)" stroke-width="2.2"/>` +
+      `<rect x="-8.5" y="-2" width="17" height="12" rx="2.5" fill="rgba(90,70,150,.5)"/><circle cy="3" r="1.8" fill="#efeaff"/><rect x="-.7" y="3" width="1.4" height="4" fill="#efeaff"/></g>` +
+      `<text x="${w/2}" y="${h/2+24}" font-size="7" font-weight="700" letter-spacing="2.4" fill="rgba(80,60,140,.55)" text-anchor="middle">TREASURE BOX</text>`,
+    front: (w,h) => `<path d="M0 3.5H${w}" stroke="rgba(255,255,255,.55)" stroke-width="1" ${NSS}/><path d="M${w/2-15} ${h}A15 9 0 0 1 ${w/2+15} ${h}Z" fill="rgba(70,50,130,.18)"/>`,
+    bottom: (w,h) => `<rect x="7" y="7" width="${w-14}" height="${h-14}" rx="8" fill="${C.felt}"/>` +
+      `<rect x="7" y="7" width="${w-14}" height="${h-14}" rx="8" fill="url(#sheen)"/>` +
+      `<text x="${w/2}" y="48" font-size="9" font-weight="700" fill="rgba(255,255,255,.85)" text-anchor="middle" letter-spacing="2">✦ TREASURE ✦</text>` +
+      `<text x="${w/2}" y="62" font-size="5.5" fill="rgba(255,255,255,.7)" text-anchor="middle" letter-spacing="1">密碼正確 · 寶盒已開啟</text>` +
+      `<rect x="121" y="29" width="18" height="16" rx="2" fill="#b9c1cd"/><circle cx="124" cy="32" r="1" fill="#778"/><circle cx="136" cy="32" r="1" fill="#778"/>`
+  }});
+}
+function renderBox(){
+  const th = S.lid + S.lift, xf = lidXf(th), xr = S.xray;
+  // 盒蓋內面是否朝向觀看者（約 27° 以上）→ 決定鎖鉤繪製順序
+  const underVisible = M(xf.p([0,0,GEO.H]), xf.v(AX), xf.v(AY)).det > 0;
+  let s = drawShadow() + drawBase() + drawInterior() + drawESP32() + drawWires() + drawBuzzer() + drawServo();
+  if (!underVisible) s += drawHook(xf, false);
+  s += drawOuterWalls(xr) + drawFrontBits();
+  if (th < 0.35) s += drawHinges();
+  s += drawLid(xf, xr);
+  if (underVisible) s += drawHook(xf, true);
+  if (th >= 0.35) s += drawHinges();
+  return s;
+}
+
+/* ---------- 4. 時間線引擎 ---------- */
+// Step 形式：{dur, start(), update(p), end()} 或 {until: () => bool}
+// start() 可回傳新的 steps，會插入在同一條 Lane 的最前面（用來處理指令的分支結果）
+class Lane {
+  constructor(name, steps = []){ this.name = name; this.q = steps.flat(Infinity); this.cur = null; }
+  get idle(){ return !this.cur && this.q.length === 0; }
+  push(...st){ this.q.push(...st.flat(Infinity)); }
+  tick(dt){
+    for (let guard = 0; guard < 800; guard++){
+      if (!this.cur){
+        if (!this.q.length) return;
+        this.cur = this.q.shift(); this.cur._e = 0;
+        if (this.cur.start){ const ins = this.cur.start(); if (Array.isArray(ins) && ins.length) this.q.unshift(...ins.flat(Infinity)); }
+      }
+      const c = this.cur;
+      if (c.until){ if (c.until()){ c.end && c.end(); this.cur = null; continue; } return; }
+      const dur = c.dur || 0, rem = dur - c._e;
+      if (dt >= rem){ c._e = dur; c.update && c.update(1); c.end && c.end(); this.cur = null; dt -= rem; continue; }
+      c._e += dt; c.update && c.update(c._e / dur); return;
+    }
+  }
+}
+const DIR = {
+  lanes: {}, running: false, speed: 1,
+  reset(){ this.lanes = {}; for (const n of ['script','esp','radio','fx']) this.lanes[n] = new Lane(n); },
+  lane(n){ return this.lanes[n] || (this.lanes[n] = new Lane(n)); },
+  setLane(n, steps){ this.lanes[n] = new Lane(n, steps); },
+  tick(dt){ for (const k of Object.keys(this.lanes)) this.lanes[k].tick(dt); }
+};
+const EASE = { io: p => p < .5 ? 2*p*p : 1 - Math.pow(-2*p+2, 2)/2, out: p => 1 - Math.pow(1-p, 3), in: p => p*p, lin: p => p };
+const call = fn => ({ dur: 0, start: fn });
+const wait = ms => ({ dur: ms });
+const until = fn => ({ until: fn });
+function tween(key, to, ms, ez = EASE.io){ let from; return { dur: ms, start(){ from = S[key]; }, update(p){ S[key] = from + (to - from) * ez(p); } }; }
+const scene = (n, title, sub) => call(() => { S.scene = n; S.capTitle = title; S.capSub = sub; });
+const cap = (title, sub = '') => call(() => { S.capTitle = title; S.capSub = sub; });
+const espQ = steps => call(() => { DIR.lane('esp').push(steps); });
+const espIdle = () => until(() => DIR.lane('esp').idle && DIR.lane('radio').idle);
+
+/* ---------- 5. 狀態與韌體邏輯（對應 MicroPython 程式） ---------- */
+const STATES = ['LOCKED','CONNECTING','PLAYING','UNLOCKING','OPEN','RESETTING'];
+let MODE = 'demo';
+let S, G;
+function initState(){
+  return { clock: 0, servo: 0, lid: 0, lift: 0, led: 0, buzz: 0, press: 0, btnLow: false,
+    xray: MODE === 'manual' ? 1 : 0, xrayT: MODE === 'manual' ? 1 : 0, phoneOff: 60,
+    ble: 'off', sys: 'LOCKED', msgs: [], typing: '', typingActive: false, sendAt: -1e9,
+    packets: [], espAt: -1e9, blockAt: -1e9, alignAt: -1e9, ripple: null, tapAt: -1e9,
+    banner: null, lastRx: null, scene: null,
+    capTitle: MODE === 'demo' ? '準備就緒' : '手動互動模式',
+    capSub: MODE === 'demo' ? '按下 PLAY DEMO 開始自動展示' : '先按 Connect BLE，再傳送 NEW 或猜測密碼',
+    reveal: false };
+}
+// generate_password()：與韌體相同的 Fisher–Yates 洗牌；Demo 模式固定 1234
+function generatePassword(){
+  if (MODE === 'demo') return '1234';
+  const d = '0123456789'.split('');
+  for (let i = 9; i > 0; i--){ const j = Math.floor(Math.random() * (i + 1)); [d[i], d[j]] = [d[j], d[i]]; }
+  return d.slice(0, 4).join('');
+}
+function initGame(){ return { password: generatePassword(), gaveUp: false, finished: false, isOpen: false, autoLockAt: null, guesses: 0 }; }
+const setSys = s => { S.sys = s; };
+function banner(text, sub, color, dur = 2800){ S.banner = { text, sub, color, t0: S.clock, dur }; }
+function addMsg(kind, text){
+  if (kind !== 'sys' && S.ble !== 'connected') return;
+  S.msgs.push({ kind, text, t: S.clock });
+  if (S.msgs.length > 40) S.msgs.shift();
+  if (kind === 'rx') S.lastRx = text;
+}
+// 手機 → ESP32：打字、送出、封包飛行
+function typeSteps(text, per){
+  const st = [call(() => { S.typing = ''; S.typingActive = true; })];
+  for (const ch of text) st.push({ dur: per, end(){ S.typing += ch; } });
+  st.push(wait(200), call(() => { S.sendAt = S.clock; }), wait(120));
+  return st;
+}
+function sendCommand(text, per = 85){
+  return [ ...typeSteps(text, per),
+    call(() => { S.typing = ''; S.typingActive = false; addMsg('tx', text); S.packets.push({ dir: 'tx', t0: S.clock, dur: TIMING.packet }); }),
+    wait(TIMING.packet),
+    call(() => { S.espAt = S.clock; return handleCommand(text); }) ];
+}
+// ESP32 → 手機：ble.send()
+function rx(text){
+  return [ call(() => { S.packets.push({ dir: 'rx', t0: S.clock, dur: TIMING.packet }); S.espAt = S.clock; }),
+    wait(TIMING.packet), call(() => addMsg('rx', text)), wait(140) ];
+}
+const rxAsync = text => call(() => { DIR.lane('radio').push(rx(text)); });
+
+// 音效（對應 tone() / victory_music() / wrong_effect() / give_up_effect()）
+const MELODY = [[523,250],[587,250],[659,250],[784,450],[659,250],[784,250],[880,450],[784,250],[880,250],[988,450],
+  [1047,600],[988,250],[880,250],[784,450],[659,250],[784,250],[1047,900],[0,300],[1047,250],[1319,300],[1568,800]];
+const tone = (fq, ms) => [{ dur: ms, start(){ S.buzz = fq; }, end(){ S.buzz = 0; } }, wait(60)];
+const ledPulse = (on, off) => [{ dur: on, start(){ S.led = 1; }, end(){ S.led = 0; } }, wait(off)];
+function victoryFx(){
+  const st = [];
+  for (const [fq, d] of MELODY){
+    if (fq === 0) st.push(call(() => { S.led = 0; S.buzz = 0; }), wait(d));
+    else st.push({ dur: d, start(){ S.led = 1; S.buzz = fq; }, end(){ S.led = 0; S.buzz = 0; } }, wait(60));
+  }
+  return st;
+}
+const wrongFx = () => [ledPulse(200,200), ledPulse(200,200), tone(300,180), tone(250,240)];
+const giveUpFx = () => [ledPulse(180,180), ledPulse(180,180), tone(523,180), tone(659,220)];
+
+// handle_command()
+function handleCommand(raw){
+  const cmd = raw.trim().toUpperCase();
+  if (!cmd) return [];
+  if (cmd === 'NEW') return newRound();
+  if (cmd === 'STATUS') return rx(G.isOpen ? 'STATUS: BOX OPEN' : G.finished ? 'STATUS: ROUND FINISHED' : 'STATUS: PLAYING');
+  if (cmd === 'LOCK') return lockSequence('cmd');
+  if (cmd.startsWith('P')) return G.finished ? rx('ROUND FINISHED. TYPE NEW') : checkGuess(cmd.slice(1));
+  return rx('UNKNOWN COMMAND');
+}
+function newRound(){
+  if (G.isOpen) return rx('PLEASE WAIT UNTIL LOCKED');
+  G.password = generatePassword(); G.gaveUp = false; G.finished = false; G.guesses = 0;
+  return [ call(() => { setSys('PLAYING'); S.lastRx = null; banner('NEW ROUND', 'ESP32 已產生新的四位不重複密碼', '#7b6cc4'); }),
+    tween('servo', 0, 250), rx('NEW ROUND STARTED'), rx('GUESS 4 UNIQUE DIGITS') ];
+}
+// check_guess()：真正計算 A / B
+function checkGuess(g){
+  if (g.length !== 4) return [call(() => banner('ERROR', '請輸入 4 位數字', '#d0564b')), rx('ERROR: ENTER 4 DIGITS')];
+  if (!/^\d+$/.test(g)) return [call(() => banner('ERROR', '只能輸入數字', '#d0564b')), rx('ERROR: NUMBERS ONLY')];
+  if (new Set(g).size !== 4) return [call(() => banner('ERROR', '四個數字不可重複', '#d0564b')), rx('ERROR: DIGITS MUST BE UNIQUE')];
+  const pw = G.password;
+  let a = 0, b = 0;
+  for (let i = 0; i < 4; i++) if (g[i] === pw[i]) a++;
+  for (const d of g) if (pw.includes(d)) b++;
+  b -= a;
+  G.guesses++;
+  if (a === 4) return unlockSteps();
+  const As = [], Bs = [], Ns = [];
+  for (let i = 0; i < 4; i++) (g[i] === pw[i] ? As : pw.includes(g[i]) ? Bs : Ns).push(g[i]);
+  const parts = [];
+  if (As.length) parts.push(`${As.join('、')} → A（位置正確）`);
+  if (Bs.length) parts.push(`${Bs.join('、')} → B（位置錯誤）`);
+  if (Ns.length) parts.push(`${Ns.join('、')} 不在密碼中`);
+  return [ call(() => banner(`${a}A${b}B`, `${g}：` + parts.join('　'), '#d08a2a', 3600)),
+    rx(`${a}A${b}B`), wrongFx() ];
+}
+// unlock()：先轉馬達 → 鎖臂退出 → 盒蓋繞鉸鏈掀開；音樂與 LED 在另一條 Lane 同步播放
+function unlockSteps(){
+  if (G.isOpen) return [];
+  G.isOpen = true; G.finished = true;
+  const gu = G.gaveUp;
+  return [
+    call(() => { setSys('UNLOCKING');
+      banner(gu ? 'ANSWER OK' : '4A0B', gu ? '放棄模式：已輸入正確答案' : '密碼正確 → 伺服馬達解鎖', gu ? '#c0862a' : '#2f9e6a', 2400);
+      DIR.setLane('fx', gu ? giveUpFx() : victoryFx()); }),
+    rxAsync(gu ? 'UNLOCKED - GIVE UP MODE' : 'PUZZLE SOLVED!'),
+    cap('① 伺服馬達 GPIO18：0° → 90°', 'set_servo(OPEN_ANGLE)，鎖臂開始向上旋轉'),
+    tween('servo', 90, TIMING.servo),
+    cap('② 鎖臂退出鎖鉤上方', '鎖鉤不再被擋住，盒蓋解除限制'), wait(380),
+    cap('③ 盒蓋繞後方鉸鏈掀開', '彈簧鉸鏈輔助或使用者掀起；鎖鉤沿圓弧路徑離開'),
+    tween('lid', GEO.LID_MAX, TIMING.lidOpen),
+    call(() => { setSys('OPEN'); banner(gu ? 'UNLOCKED' : 'UNLOCK SUCCESS', gu ? 'GIVE UP MODE · 較短提示音' : '寶盒已開啟 · 播放成功音樂', gu ? '#c0862a' : '#2f9e6a', 3600); }),
+    cap(gu ? '放棄模式提示音' : '成功音樂播放中', 'LED 與蜂鳴器同步：每個音符點亮一次 LED'),
+    until(() => DIR.lane('fx').idle),
+    call(() => { G.autoLockAt = S.clock + TIMING.autoLock; S.capTitle = gu ? '提示音結束 → 開始 5 秒自動上鎖倒數' : '音樂結束 → 開始 5 秒自動上鎖倒數'; S.capSub = 'opened_at = ticks_ms()'; })
+  ];
+}
+// lock_box()：依物理順序「盒蓋閉合 → 鎖鉤對準 → 馬達復位」
+function lockSequence(source){
+  return [ call(() => {
+    G.autoLockAt = null; setSys('RESETTING');
+    const st = [];
+    if (S.lid > 0.01) st.push(cap('① 盒蓋閉合（使用者手動）', '馬達無法拉動盒蓋，必須先把盒蓋關上'), tween('lid', 0, TIMING.lidClose));
+    st.push(cap('② 確認鎖鉤回到鎖臂下方', '鎖鉤已對準，才進行復位'), call(() => { S.alignAt = S.clock; }), wait(500));
+    st.push(cap(source === 'auto' ? '③ 5 秒到 → 伺服馬達 90° → 0° 自動復位' : '③ LOCK 指令 → 伺服馬達轉回 0°', '鎖臂轉回並壓住鎖鉤，盒蓋重新上鎖'),
+      tween('servo', 0, TIMING.servo));
+    st.push(call(() => { G.isOpen = false; S.led = 0; S.buzz = 0; setSys(G.finished ? 'LOCKED' : 'PLAYING');
+      banner('BOX LOCKED', '盒蓋已閉合且鎖臂到位', '#5a6785'); }), rx('BOX LOCKED'));
+    return st;
+  }) ];
+}
+// 實體放棄按鈕：只傳送答案，不直接開鎖
+function giveUpSteps(){
+  return [ cap('按下綠色放棄按鈕', 'GPIO32 由 HIGH 變 LOW（內部上拉 Pin.PULL_UP）'),
+    tween('press', 1, 130, EASE.out), call(() => { S.btnLow = true; }), wait(140),
+    tween('press', 0, 170, EASE.in), call(() => { S.btnLow = false; }),
+    call(() => {
+      if (G.finished) return rx('ROUND FINISHED');
+      G.gaveUp = true;
+      return [ call(() => banner('ANSWER:' + G.password, '只傳送答案 · 寶盒仍保持上鎖', '#c0862a', 3600)),
+        rx('PLAYER GAVE UP'), rx('ANSWER:' + G.password) ];
+    }) ];
+}
+// 上鎖狀態下嘗試掀蓋：鉤唇上升 3 mm 即頂到鎖臂
+function blockedAttempt(){
+  const tug = () => [tween('lift', BLOCK_LIFT, 170, EASE.out), call(() => { S.blockAt = S.clock; }), wait(220), tween('lift', 0, 220, EASE.in), wait(140)];
+  return [ cap('嘗試掀開盒蓋 → 被鎖臂擋住', '鎖鉤頂到鎖臂下緣，盒蓋只能抬起約 1.6°'),
+    call(() => banner('BLOCKED', '鎖臂擋住鎖鉤，盒蓋無法開啟', '#d0564b')), tug(), tug() ];
+}
+const userCloseLid = title => [cap(title, '盒蓋繞後方鉸鏈閉合，鎖鉤回到鎖臂下方'), tween('lid', 0, TIMING.lidClose)];
+function userLidToggle(){
+  return [ call(() => {
+    if (S.lid > 0.02) return userCloseLid('使用者關上盒蓋');
+    if (S.servo >= 85) return [cap('使用者掀開盒蓋', '鎖臂位於 90°，鎖鉤可自由通過'), tween('lid', GEO.LID_MAX, TIMING.lidOpen)];
+    return blockedAttempt();
+  }) ];
+}
+// BLE 連線流程（手機端畫面，不需真正連線）
+function connectSteps(fast){
+  return [ call(() => {
+    if (S.ble === 'connected') return [];
+    return [
+      call(() => { setSys('CONNECTING'); S.ble = 'scanning'; S.ripple = 'phone'; }),
+      cap('手機掃描 BLE 裝置', '手機靠近寶盒，搜尋名稱為 Treasure-Box 的 ESP32'),
+      tween('phoneOff', 0, 700), wait(fast ? 500 : 900),
+      call(() => { S.ble = 'found'; }), wait(fast ? 400 : 800),
+      call(() => { S.ble = 'connecting'; S.ripple = 'both'; S.tapAt = S.clock; }),
+      cap('建立 BLE UART 連線', 'BLE_UART("Treasure-Box")'), wait(fast ? 700 : 1300),
+      call(() => { S.ble = 'connected'; S.ripple = null; setSys(G.isOpen ? 'OPEN' : G.finished ? 'LOCKED' : 'PLAYING');
+        addMsg('sys', 'BLE Connected · Treasure-Box'); banner('BLE Connected', '手機已透過 BLE UART 連上 ESP32', '#3f7fd6');
+        S.capTitle = 'BLE Connected'; S.capSub = '手機可傳送文字指令：NEW / P1234 / STATUS / LOCK'; })
+    ];
+  }) ];
+}
+
+/* ---------- 6. Demo 腳本 ---------- */
+function scriptMain(){
+  return [
+    scene(1, '寶盒待機', '盒蓋關閉 · 鎖臂卡住鎖鉤 · 伺服馬達 0° · LED 熄滅'), wait(2600),
+    espQ(blockedAttempt()), espIdle(), wait(900),
+    scene(2, '手機連線 BLE', '手機靠近寶盒，掃描並連線 ESP32「Treasure-Box」'), wait(800),
+    espQ(connectSteps(false)), espIdle(), wait(1200),
+    cap('切換剖面透視', '顯示 ESP32、SG90、LED、蜂鳴器與按鈕的安裝位置與配線'), call(() => { S.xrayT = 1; }), wait(2400),
+    scene(3, '開始新遊戲', '手機傳送 NEW → ESP32 產生新密碼（不顯示於手機）'), wait(600),
+    espQ(sendCommand('NEW')), espIdle(), wait(1500),
+    scene(4, '猜測密碼失敗', '輸入 P4296 → 回傳 1A1B；鎖臂與盒蓋保持不動'), wait(600),
+    espQ(sendCommand('P4296')), espIdle(), wait(1800),
+    scene(5, '猜測成功', '輸入 P1234 → 4A0B → 馬達解鎖 → 盒蓋開啟'), wait(600),
+    espQ(sendCommand('P1234')), espIdle(),
+    scene(6, '自動上鎖', '音樂結束後倒數 5 秒；先關蓋、鎖鉤對準，再由馬達復位'), wait(1300),
+    espQ(userCloseLid('① 使用者關上盒蓋（倒數進行中）')), espIdle(),
+    until(() => !G.isOpen && DIR.lane('esp').idle && DIR.lane('radio').idle), wait(2000)
+  ];
+}
+function scriptGiveUp(standalone){
+  const st = [];
+  if (standalone) st.push(scene(7, '放棄機制', '先連線 BLE'), wait(1000), espQ(connectSteps(true)), espIdle(), call(() => { S.xrayT = 1; }), wait(1200));
+  st.push(
+    scene(7, '放棄機制', '按下實體綠色按鈕 → ESP32 傳送答案 → 玩家輸入答案才解鎖'), wait(1600),
+    espQ(sendCommand('NEW')), espIdle(), wait(1000),
+    espQ(giveUpSteps()), espIdle(), wait(600),
+    cap('手機收到 ANSWER:1234', '放棄按鈕只傳送答案，寶盒仍保持上鎖'), wait(2200),
+    cap('玩家輸入答案 P1234', 'ESP32 驗證正確後才解鎖（較短提示音）'), wait(800),
+    espQ(sendCommand('P1234')), espIdle(), wait(800),
+    espQ(userCloseLid('① 使用者關上盒蓋（倒數進行中）')), espIdle(),
+    until(() => !G.isOpen && DIR.lane('esp').idle && DIR.lane('radio').idle), wait(1800));
+  return st;
+}
+function buildScript(kind){
+  const body = kind === 'giveup' ? scriptGiveUp(true) : kind === 'main' ? scriptMain() : [scriptMain(), scriptGiveUp(false)];
+  return [ body, scene('END', 'Demo 完成', '可切換「手動互動」自行操作，或按重新播放'), wait(2600),
+    call(() => { if (document.getElementById('chkLoop').checked) pendingRestart = true; else { demoState = 'ended'; DIR.running = false; updateUI(); } }) ];
+}
+
+/* ---------- 7. 渲染 ---------- */
+const $ = id => document.getElementById(id);
+const esc = s => String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+let boxKey = '';
+function armTip(){ const a = S.servo * Math.PI / 180, { xs, zs } = GEO.servo; return [xs + 22*Math.cos(a), 46, zs + 22*Math.sin(a)]; }
+const LABELS = [
+  { side:'L', y:378, t:'ESP32 主控板', s:'BLE UART · 遊戲邏輯', a: () => P(36,101,14.5), inner: true },
+  { side:'L', y:440, t:'LED 狀態燈', s:'GPIO25 · 串聯限流電阻', a: () => P(36,-2,86) },
+  { side:'L', y:502, t:'放棄按鈕（綠）', s:'GPIO32 · Pin.PULL_UP', a: () => P(36,-3,42) },
+  { side:'R', y:262, t:'後方鉸鏈', s:'盒蓋旋轉軸心', a: () => P(GEO.W, GEO.D, GEO.H) },
+  { side:'R', y:338, t:'SG90 伺服馬達', s:'GPIO18 · 5V · GND', a: () => P(100,62,58) },
+  { side:'R', y:408, t:'旋轉鎖臂', s:'0° 上鎖 ↔ 90° 解鎖', a: () => { const p = armTip(); return P(p[0], p[1], p[2]); } },
+  { side:'R', y:478, t:'鎖鉤（固定於盒蓋）', s:'上鎖時被鎖臂壓住', a: () => { const p = lidXf(S.lid + S.lift).p([118,34,42]); return P(p[0],p[1],p[2]); } },
+  { side:'R', y:628, t:'被動蜂鳴器', s:'GPIO27 · PWM 音調', a: () => P(196,105,16), inner: true }
+];
+function renderLabels(){
+  let s = '';
+  for (const L of LABELS){
+    const a = L.a(), op = L.inner ? 0.3 + 0.7 * S.xray : 1;
+    const lx = L.side === 'L' ? 300 : 930, ly = L.y;
+    const kx = L.side === 'L' ? 322 : 908;
+    s += `<g opacity="${f(op)}"><path d="M${L.side === 'L' ? 306 : 922} ${ly-5}H${kx}L${f(a[0])} ${f(a[1])}" fill="none" stroke="#7b6cc4" stroke-width="1.1" stroke-opacity=".75"/>` +
+      `<circle cx="${f(a[0])}" cy="${f(a[1])}" r="5.5" fill="none" stroke="#7b6cc4" stroke-width="1.2"/><circle cx="${f(a[0])}" cy="${f(a[1])}" r="2.2" fill="#7b6cc4"/>` +
+      `<text x="${lx}" y="${ly}" font-size="15" font-weight="700" fill="#2b2838" text-anchor="${L.side === 'L' ? 'end' : 'start'}">${L.t}</text>` +
+      `<text x="${lx}" y="${ly+18}" font-size="12" fill="#7a7590" text-anchor="${L.side === 'L' ? 'end' : 'start'}">${L.s}</text></g>`;
+  }
+  return s;
+}
+function renderStatus(){
+  const x = 44, y = 136, w = 256, h = 206;
+  let s = `<rect x="44" y="96" width="${MODE === 'demo' ? 214 : 244}" height="26" rx="13" fill="${MODE === 'demo' ? '#7b6cc4' : '#2f9e6a'}"/>` +
+    `<text x="${MODE === 'demo' ? 151 : 166}" y="113.5" font-size="12" font-weight="700" fill="#fff" text-anchor="middle" letter-spacing=".4">${MODE === 'demo' ? 'DEMO MODE · 固定示範密碼 1234' : 'INTERACTIVE · 隨機四位不重複密碼'}</text>`;
+  s += `<rect x="${x}" y="${y}" width="${w}" height="${h}" rx="16" fill="#fff" fill-opacity=".82" stroke="#e2dcf0"/>`;
+  s += `<text x="${x+16}" y="${y+24}" font-size="14" font-weight="800" fill="#2b2838">ESP32 狀態機</text>`;
+  s += `<text x="${x+w-16}" y="${y+24}" font-size="11" fill="#9a94b0" text-anchor="end">state machine</text>`;
+  STATES.forEach((st, i) => {
+    const cx = x + 13 + (i % 3) * 77, cy = y + 36 + Math.floor(i / 3) * 27, on = S.sys === st;
+    s += `<rect x="${cx}" y="${cy}" width="73" height="21" rx="10.5" fill="${on ? '#7b6cc4' : '#f1eef8'}"/>` +
+      `<text x="${cx+36.5}" y="${cy+14.5}" font-size="9.6" font-weight="700" fill="${on ? '#fff' : '#a29cb8'}" text-anchor="middle" letter-spacing=".3">${st}</text>`;
+  });
+  const rows = [
+    ['伺服馬達 · GPIO18', `${Math.round(S.servo)}°`, S.servo > 1 ? '#d08a2a' : '#2b2838'],
+    ['LED · GPIO25', S.led ? 'ON' : 'OFF', S.led ? '#e0453a' : '#9a94b0'],
+    ['蜂鳴器 · GPIO27', S.buzz ? `${S.buzz} Hz` : '—', S.buzz ? '#7b6cc4' : '#9a94b0'],
+    ['按鈕 · GPIO32', S.btnLow ? 'LOW（按下）' : 'HIGH', S.btnLow ? '#2f9e6a' : '#9a94b0']
+  ];
+  if (G.autoLockAt != null) rows.push(['自動上鎖倒數', `${Math.max(0, (G.autoLockAt - S.clock) / 1000).toFixed(1)} s`, '#d08a2a']);
+  else rows.push(['目前密碼（點擊顯示）', S.reveal ? G.password : '●●●●', '#2b2838', true]);
+  rows.forEach((r, i) => {
+    const ry = y + 112 + i * 20;
+    s += `<g${r[3] ? ' data-act="reveal"' : ''}><rect x="${x+8}" y="${ry-14}" width="${w-16}" height="19" fill="transparent"/>` +
+      `<text x="${x+16}" y="${ry}" font-size="12" fill="#7a7590">${r[0]}</text>` +
+      `<text x="${x+w-16}" y="${ry}" font-size="12.5" font-weight="700" fill="${r[2]}" text-anchor="end" class="mono">${esc(r[1])}</text></g>`;
+  });
+  return s;
+}
+function renderInset(){
+  const X = x => 48 + (x - 60) * 2.4, Y = z => 576 + (120 - z) * 2.4;
+  const th = S.lid + S.lift, xf = lidXf(th);
+  const lipPt = xf.p([124, 42, 45.5]), rise = lipPt[2] - 45.5;
+  const { xs, zs } = GEO.servo;
+  let s = `<rect x="36" y="540" width="264" height="318" rx="16" fill="#fff" fill-opacity=".85" stroke="#e2dcf0"/>`;
+  s += `<text x="52" y="564" font-size="14" font-weight="800" fill="#2b2838">鎖扣機構 · 正視剖面</text>`;
+  s += `<text x="284" y="564" font-size="12" font-weight="700" fill="${S.servo > 1 ? '#d08a2a' : '#7b6cc4'}" text-anchor="end" class="mono">SERVO ${Math.round(S.servo)}°</text>`;
+  s += `<g clip-path="url(#insetClip)"><rect x="48" y="576" width="240" height="220" fill="#f7f5f0"/>`;
+  s += `<line x1="48" y1="${Y(110)}" x2="288" y2="${Y(110)}" stroke="#b9b2c8" stroke-dasharray="4 3"/>`;
+  s += `<text x="52" y="${Y(110)+13}" font-size="10" fill="#9a94b0">盒身上緣</text>`;
+  s += `<rect x="${X(76)}" y="${Y(46)}" width="${29*2.4}" height="${40*2.4}" fill="#e3ded2" stroke="#c9c2b2"/>`;
+  s += `<rect x="${X(79)}" y="${Y(58)}" width="${23*2.4}" height="${12*2.4}" rx="2" fill="#3f7de0"/>`;
+  s += `<text x="${X(80.5)}" y="${Y(52)+4}" font-size="9" font-weight="800" fill="#fff">SG90</text>`;
+  // 角度導引弧
+  const hx = X(xs), hy = Y(zs), R = 72;
+  s += `<path d="M${hx+R} ${hy}A${R} ${R} 0 0 0 ${hx} ${hy-R}" fill="none" stroke="#c8bfe6" stroke-dasharray="3 4"/>`;
+  s += `<line x1="${hx}" y1="${hy}" x2="${hx}" y2="${hy-R}" stroke="#d6cfee" stroke-dasharray="2 4"/>`;
+  // 鎖鉤（隨盒蓋上升）
+  const tY = z => Y(z + rise);
+  s += `<rect x="${X(126)}" y="${tY(110)}" width="${8*2.4}" height="${(110-38.5)*2.4}" fill="#a9b2bf" stroke="#7f8896"/>`;
+  s += `<rect x="${X(112)}" y="${tY(45.5)}" width="${22*2.4}" height="${7*2.4}" fill="#9aa4b3" stroke="#7f8896"/>`;
+  s += `<text x="${X(136)}" y="${tY(40)}" font-size="10.5" fill="#6d7584">鎖鉤</text>`;
+  // 鎖臂
+  s += `<circle cx="${hx}" cy="${hy}" r="${5.6*2.4}" fill="#4c8ae9"/>`;
+  s += `<g transform="rotate(${f(-S.servo)} ${hx} ${hy})"><path d="M${hx} ${hy-8.4}L${hx+55.2} ${hy-7.2}A7.2 7.2 0 0 1 ${hx+55.2} ${hy+7.2}L${hx} ${hy+8.4}A8.4 8.4 0 0 1 ${hx} ${hy-8.4}Z" fill="#f2a650" stroke="#b56a22"/>` +
+    `<text x="${hx+30}" y="${hy+4}" font-size="9.5" font-weight="700" fill="#7a3f0c" text-anchor="middle">鎖臂</text></g>`;
+  s += `<circle cx="${hx}" cy="${hy}" r="3.5" fill="#888"/>`;
+  // 盒蓋（前緣）
+  const lidLo = GEO.H + GEO.D * Math.sin(th);
+  s += `<rect x="48" y="${Y(lidLo + GEO.T)}" width="240" height="${GEO.T*2.4}" fill="#cfc5ec" stroke="#a99bd6"/>`;
+  s += `<text x="${X(70)}" y="${Y(lidLo)-8}" font-size="10" fill="#6d5fae">盒蓋</text>`;
+  // 碰撞提示
+  if (S.clock - S.blockAt < 380) s += `<rect x="${X(112)}" y="${Y(48.5)-3}" width="${10*2.4}" height="6" rx="3" fill="#ff4d4d" opacity=".85"/>`;
+  if (S.clock - S.alignAt < 900) s += `<circle cx="${X(117)}" cy="${Y(42)}" r="11" fill="#2f9e6a" opacity=".9"/><path d="M${X(117)-5} ${Y(42)}l3.5 3.5l6-7" stroke="#fff" stroke-width="2.2" fill="none"/>`;
+  s += `</g>`;
+  let st, col;
+  if (S.lid + S.lift > 0.004 && S.servo < 5) { st = '● 鎖鉤頂到鎖臂：無法開啟'; col = '#d0564b'; }
+  else if (S.servo < 2) { st = '● 上鎖：鎖臂壓在鎖鉤上方'; col = '#d0564b'; }
+  else if (S.servo > 88) { st = '● 解鎖：鎖臂已轉離鎖鉤路徑'; col = '#2f9e6a'; }
+  else { st = `● 馬達轉動中 ${Math.round(S.servo)}°`; col = '#d08a2a'; }
+  s += `<text x="52" y="820" font-size="12.5" font-weight="700" fill="${col}">${st}</text>`;
+  s += `<text x="52" y="842" font-size="11" fill="#7a7590">上鎖間隙 3 mm · 馬達需轉回前先關蓋</text>`;
+  return s;
+}
+function renderFx(){
+  let s = '';
+  if (S.led){ const p = P(36,-3,86); s += `<circle cx="${f(p[0])}" cy="${f(p[1])}" r="46" fill="url(#ledGlow)"/>`; }
+  if (S.buzz){
+    const p = P(GEO.W + 0.5, 105, 14); const t = S.clock;
+    s += `<g transform="translate(${f(p[0]+6)} ${f(p[1])}) rotate(16)">`;
+    for (let k = 0; k < 3; k++){ const r = 10 + ((t / 9 + k * 14) % 42), o = 1 - (r - 10) / 42;
+      const a = 0.75, x0 = r * Math.cos(a), y0 = r * Math.sin(a);
+      s += `<path d="M${f(x0)} ${f(-y0)}A${f(r)} ${f(r)} 0 0 1 ${f(x0)} ${f(y0)}" fill="none" stroke="#7b6cc4" stroke-width="2.4" stroke-linecap="round" opacity="${f(o)}"/>`; }
+    s += `</g><text x="${f(p[0]+34)}" y="${f(p[1]-26)}" font-size="13" font-weight="700" fill="#7b6cc4" class="mono">♪ ${S.buzz} Hz</text>`;
+    if (S.xray > 0.3){ const q = P(196,105,16); s += `<ellipse cx="${f(q[0])}" cy="${f(q[1])}" rx="${f(16 + 3*Math.sin(t/20))}" ry="${f(8 + 1.5*Math.sin(t/20))}" fill="none" stroke="#9a86e6" stroke-width="1.5" opacity="${f(S.xray)}"/>`; }
+  }
+  const espAge = S.clock - S.espAt;
+  if (espAge < 450){ const q = P(36,102,15); s += `<circle cx="${f(q[0])}" cy="${f(q[1])}" r="${f(26 + espAge/20)}" fill="url(#espGlow)" opacity="${f((1 - espAge/450) * (0.35 + 0.65*S.xray))}"/>`; }
+  if (S.clock - S.blockAt < 380){ const q = P(117, 47, 47.5);
+    s += `<circle cx="${f(q[0])}" cy="${f(q[1])}" r="9" fill="none" stroke="#ff4d4d" stroke-width="2.4"/><circle cx="${f(q[0])}" cy="${f(q[1])}" r="3" fill="#ff4d4d"/>`; }
+  if (S.clock - S.alignAt < 900){ const q = P(124, 40, 44);
+    s += `<circle cx="${f(q[0])}" cy="${f(q[1])}" r="9" fill="#2f9e6a" opacity=".9"/><path d="M${f(q[0]-4)} ${f(q[1])}l3 3l5.5-6" stroke="#fff" stroke-width="2" fill="none"/>`; }
+  if (S.btnLow){ const q = P(36,-4,42); s += `<circle cx="${f(q[0])}" cy="${f(q[1])}" r="24" fill="none" stroke="#3fbf6e" stroke-width="2.5" opacity=".8"/>`; }
+  // BLE 掃描/連線波紋
+  if (S.ripple){
+    const pts = [[1205 + S.phoneOff + 2, 360]];
+    if (S.ripple === 'both') pts.push(P(36, 118, 13));
+    for (const c of pts) for (let k = 0; k < 3; k++){ const r = 8 + ((S.clock / 11 + k * 30) % 90);
+      s += `<circle cx="${f(c[0])}" cy="${f(c[1])}" r="${f(r)}" fill="none" stroke="#4a86e6" stroke-width="2" opacity="${f(0.75 * (1 - r/98))}"/>`; }
+  }
+  return s;
+}
+function pktGeom(){
+  const a = P(36, 118, 13), b = [1205 + S.phoneOff + 4, 360];
+  const c = [(a[0] + b[0]) / 2 + 60, Math.min(a[1], b[1]) - 200];
+  return { a, b, c };
+}
+function renderPackets(){
+  if (!S.packets.length) return '';
+  const { a, b, c } = pktGeom(); let s = '';
+  s += `<path d="M${f(a[0])} ${f(a[1])}Q${f(c[0])} ${f(c[1])} ${f(b[0])} ${f(b[1])}" fill="none" stroke="#7b6cc4" stroke-width="1.4" stroke-dasharray="3 6" opacity=".35"/>`;
+  for (const p of S.packets){
+    let t = clamp((S.clock - p.t0) / p.dur, 0, 1); t = EASE.io(t); if (p.dir === 'tx') t = 1 - t;
+    const x = (1-t)*(1-t)*a[0] + 2*(1-t)*t*c[0] + t*t*b[0], y = (1-t)*(1-t)*a[1] + 2*(1-t)*t*c[1] + t*t*b[1];
+    const col = p.dir === 'tx' ? '#7b6cc4' : '#2f9e6a';
+    s += `<circle cx="${f(x)}" cy="${f(y)}" r="13" fill="${col}" opacity=".18"/><circle cx="${f(x)}" cy="${f(y)}" r="6" fill="${col}"/>`;
+  }
+  return s;
+}
+function textW(str, cjk, ascii){ let w = 0; for (const ch of str) w += /[\u2E80-\uFFFF]/.test(ch) ? cjk : ascii; return w; }
+function renderBanner(){
+  const B = S.banner; if (!B) return '';
+  const age = S.clock - B.t0; if (age > B.dur || age < 0) return '';
+  const o = Math.min(1, age / 180) * Math.min(1, (B.dur - age) / 420), sc = 0.94 + 0.06 * Math.min(1, age / 200);
+  const w = clamp(Math.max(textW(B.text, 30, 19), textW(B.sub || '', 13.5, 7.4)) + 70, 260, 560);
+  return `<g transform="translate(700 56) scale(${f(sc)})" opacity="${f(o)}">` +
+    `<rect x="${-w/2}" y="-36" width="${w}" height="70" rx="20" fill="#fff" fill-opacity=".94" stroke="${B.color}" stroke-opacity=".35"/>` +
+    `<rect x="${-w/2}" y="-36" width="8" height="70" rx="4" fill="${B.color}"/>` +
+    `<text y="-2" font-size="28" font-weight="800" fill="${B.color}" text-anchor="middle" letter-spacing="1" class="mono">${esc(B.text)}</text>` +
+    `<text y="22" font-size="13.5" fill="#5f5a73" text-anchor="middle">${esc(B.sub || '')}</text></g>`;
+}
+function renderCaption(){
+  let sub = S.capSub || '';
+  if (G.autoLockAt != null) sub += `　｜　自動上鎖倒數 ${Math.max(0, (G.autoLockAt - S.clock) / 1000).toFixed(1)} s`;
+  const sc = S.scene == null ? '' : S.scene === 'END' ? 'END　' : `SCENE ${S.scene} / 7　`;
+  return `<rect x="320" y="858" width="860" height="34" rx="17" fill="#fff" fill-opacity=".75" stroke="#e4def2"/>` +
+    `<text x="750" y="881" font-size="15" text-anchor="middle"><tspan font-weight="800" fill="#7b6cc4">${sc}</tspan><tspan font-weight="700" fill="#2b2838">${esc(S.capTitle)}</tspan><tspan fill="#7a7590">　${esc(sub)}</tspan></text>` +
+    `<text x="1350" y="822" font-size="12" fill="#9a94b0" text-anchor="middle">手機 App 模擬畫面 · BLE UART 文字指令</text>`;
+}
+function renderPhone(){
+  const ox = 1205 + S.phoneOff, oy = 108, now = performance.now();
+  let s = `<g transform="translate(${f(ox)} ${oy})" opacity="${f(1 - S.phoneOff / 300)}">`;
+  s += `<rect x="6" y="14" width="290" height="680" rx="48" fill="#3a2c6a" opacity=".22" filter="url(#blur14)"/>`;
+  s += `<rect width="290" height="680" rx="46" fill="url(#phoneBody)" stroke="#9c97ae"/>`;
+  s += `<rect x="5" y="5" width="280" height="670" rx="42" fill="#17161e"/>`;
+  s += `<g transform="translate(14 14)"><rect width="262" height="652" rx="33" fill="#f8f6fc"/>`;
+  s += `<rect x="91" y="10" width="80" height="24" rx="12" fill="#111"/>`;
+  s += `<text x="26" y="28" font-size="13" font-weight="700" fill="#2b2838">09:41</text>`;
+  s += `<g fill="#2b2838"><rect x="188" y="21" width="3" height="6" rx="1"/><rect x="193" y="18" width="3" height="9" rx="1"/><rect x="198" y="15" width="3" height="12" rx="1"/>` +
+    `<rect x="210" y="16" width="24" height="12" rx="3.5" fill="none" stroke="#2b2838" stroke-width="1.2"/><rect x="212.5" y="18.5" width="17" height="7" rx="1.5"/></g>`;
+  s += `<rect x="16" y="48" width="38" height="38" rx="11" fill="url(#appIcon)"/>` +
+    `<path d="M29 63v-4a6 6 0 0 1 12 0v4" fill="none" stroke="#fff" stroke-width="2.2"/><rect x="26.5" y="63" width="17" height="13" rx="3" fill="#fff"/><circle cx="35" cy="69" r="1.8" fill="#7b6cc4"/>`;
+  s += `<text x="64" y="64" font-size="16" font-weight="800" fill="#2b2838">寶盒控制器</text>`;
+  s += `<text x="64" y="81" font-size="11" fill="#8a85a0">Treasure-Box · BLE UART</text>`;
+  const pill = { off: ['#eceaf3', '#a29cb8', '未連線 · Disconnected'], scanning: ['#fff3df', '#e0a030', '掃描中 · Scanning…'],
+    found: ['#fff3df', '#e0a030', '找到裝置 · Found'], connecting: ['#e6efff', '#4a86e6', '連線中 · Connecting…'],
+    connected: ['#e2f6ea', '#2f9e6a', 'BLE Connected'] }[S.ble];
+  s += `<rect x="14" y="98" width="234" height="28" rx="14" fill="${pill[0]}"/><circle cx="31" cy="112" r="4.5" fill="${pill[1]}"/>` +
+    `<text x="43" y="116.5" font-size="12.5" font-weight="700" fill="${pill[1]}">${pill[2]}</text>`;
+  const manual = MODE === 'manual';
+  if (S.ble !== 'connected'){
+    s += `<text x="16" y="152" font-size="12" font-weight="700" fill="#8a85a0">附近的 BLE 裝置</text>`;
+    if (S.ble === 'off'){
+      s += `<rect x="14" y="166" width="234" height="66" rx="14" fill="none" stroke="#d9d3ea" stroke-dasharray="4 4"/>` +
+        `<text x="131" y="194" font-size="12.5" fill="#9a94b0" text-anchor="middle">尚未掃描</text>` +
+        `<g data-act="connect"><rect x="81" y="203" width="100" height="22" rx="11" fill="#7b6cc4"/><text x="131" y="218" font-size="11.5" font-weight="700" fill="#fff" text-anchor="middle">掃描並連線</text></g>`;
+    } else if (S.ble === 'scanning'){
+      s += `<g transform="translate(131 205) rotate(${f((S.clock / 3) % 360)})"><circle r="14" fill="none" stroke="#e2dcf2" stroke-width="3"/><path d="M0 -14A14 14 0 0 1 14 0" fill="none" stroke="#7b6cc4" stroke-width="3" stroke-linecap="round"/></g>` +
+        `<text x="131" y="242" font-size="12" fill="#8a85a0" text-anchor="middle">掃描中…</text>`;
+    } else {
+      const tap = S.clock - S.tapAt < 300;
+      s += `<rect x="14" y="166" width="234" height="64" rx="14" fill="#fff" stroke="${tap ? '#7b6cc4' : '#e4def2'}" stroke-width="${tap ? 2 : 1}"/>` +
+        `<circle cx="42" cy="198" r="15" fill="#e8e4f8"/><path d="M38 192l8 7l-4 3.5V186.5l4 3.5l-8 7" fill="none" stroke="#4a86e6" stroke-width="1.8" stroke-linejoin="round"/>` +
+        `<text x="66" y="193" font-size="14" font-weight="700" fill="#2b2838">Treasure-Box</text>` +
+        `<text x="66" y="211" font-size="10.5" fill="#8a85a0">ESP32 · −48 dBm</text>` +
+        `<rect x="178" y="184" width="60" height="28" rx="14" fill="${S.ble === 'connecting' ? '#4a86e6' : '#7b6cc4'}"/>` +
+        `<text x="208" y="202.5" font-size="12" font-weight="700" fill="#fff" text-anchor="middle">${S.ble === 'connecting' ? '連線中' : '連線'}</text>`;
+    }
+    s += `<text x="131" y="380" font-size="12" fill="#b3aec4" text-anchor="middle">連線後即可傳送文字指令</text>`;
+  } else {
+    s += `<rect x="14" y="138" width="234" height="74" rx="16" fill="#fff" stroke="#e4def2"/>`;
+    s += `<text x="28" y="158" font-size="11" fill="#8a85a0">最近回應 · Last RX</text>`;
+    s += `<text x="234" y="158" font-size="11" fill="#8a85a0" text-anchor="end">猜測 ${G.guesses} 次</text>`;
+    const r = S.lastRx; let big = '';
+    const m = r && r.match(/^(\d)A(\d)B$/);
+    if (m) big = `<tspan fill="#2f9e6a">${m[1]}A</tspan><tspan fill="#d08a2a">${m[2]}B</tspan>`;
+    else if (r === 'PUZZLE SOLVED!') big = `<tspan fill="#2f9e6a">4A0B ✓</tspan>`;
+    else if (r && r.startsWith('ANSWER:')) big = `<tspan fill="#c0862a">${esc(r)}</tspan>`;
+    if (big) s += `<text x="28" y="198" font-size="28" font-weight="800" class="mono">${big}</text>`;
+    else s += `<text x="28" y="194" font-size="${r ? 13 : 22}" font-weight="700" fill="${r ? '#5f5a73' : '#c9c3da'}" class="mono">${r ? esc(r) : '—'}</text>`;
+    // 訊息紀錄
+    s += `<g clip-path="url(#logClip)">`;
+    let yb = 536;
+    for (let i = S.msgs.length - 1; i >= 0 && yb > 214; i--){
+      const M2 = S.msgs[i], age = S.clock - M2.t, k = clamp(age / 220, 0, 1), dy = (1 - k) * 10;
+      const h = 26, yy = yb - h + dy;
+      if (M2.kind === 'sys'){
+        const w = textW(M2.text, 11, 6.4) + 24;
+        s += `<g opacity="${f(k)}"><rect x="${f(131 - w/2)}" y="${f(yy)}" width="${f(w)}" height="${h}" rx="13" fill="#e2f6ea"/><text x="131" y="${f(yy+17)}" font-size="11" fill="#2f9e6a" text-anchor="middle" font-weight="700">${esc(M2.text)}</text></g>`;
+      } else {
+        const w = M2.text.length * 7.6 + 34, tx = M2.kind === 'tx';
+        const x = tx ? 248 - w : 14;
+        s += `<g opacity="${f(k)}"><rect x="${f(x)}" y="${f(yy)}" width="${f(w)}" height="${h}" rx="13" fill="${tx ? '#7b6cc4' : '#fff'}" stroke="${tx ? 'none' : '#e2dcf0'}"/>` +
+          `<text x="${f(x+10)}" y="${f(yy+17)}" font-size="9" font-weight="800" fill="${tx ? '#d9d2f6' : '#2f9e6a'}">${tx ? 'TX' : 'RX'}</text>` +
+          `<text x="${f(x+26)}" y="${f(yy+17.5)}" font-size="12.5" fill="${tx ? '#fff' : '#2b2838'}" class="mono">${esc(M2.text)}</text></g>`;
+      }
+      yb -= h + 6;
+    }
+    s += `</g>`;
+  }
+  // 輸入列
+  const caret = S.typingActive && Math.floor(now / 450) % 2 === 0;
+  const txt = S.typing || '';
+  s += `<rect x="14" y="552" width="190" height="40" rx="20" fill="#fff" stroke="${S.typingActive ? '#7b6cc4' : '#ddd6ee'}" stroke-width="${S.typingActive ? 1.8 : 1}"/>`;
+  s += txt ? `<text x="30" y="577" font-size="14" fill="#2b2838" class="mono">${esc(txt)}</text>` : `<text x="30" y="577" font-size="13" fill="#b6b0c8">輸入指令…</text>`;
+  if (caret) s += `<rect x="${30 + txt.length * 8.45}" y="563" width="1.6" height="18" fill="#7b6cc4"/>`;
+  const flash = S.clock - S.sendAt < 260;
+  s += `<circle cx="228" cy="572" r="20" fill="${flash ? '#5b4bb0' : '#7b6cc4'}"/>` + (flash ? `<circle cx="228" cy="572" r="26" fill="none" stroke="#7b6cc4" stroke-width="2" opacity=".5"/>` : '') +
+    `<path d="M220 572h14m-5 -6l6 6l-6 6" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>`;
+  [['NEW', 14, 60], ['STATUS', 82, 80], ['LOCK', 170, 64]].forEach(([c, x, w]) => {
+    s += `<g data-act="cmd:${c}"><rect x="${x}" y="604" width="${w}" height="26" rx="13" fill="#efebfa"/><text x="${x + w/2}" y="621.5" font-size="11.5" font-weight="700" fill="#6d5fae" text-anchor="middle" class="mono">${c}</text></g>`;
+  });
+  s += `<rect x="81" y="640" width="100" height="5" rx="2.5" fill="#2b2838" opacity=".8"/>`;
+  s += `</g></g>`;
+  return s;
+}
+function render(){
+  const key = [S.lid, S.lift, S.servo, S.xray, S.led, S.press].map(v => f(v)).join('|') + '|' + Math.floor(performance.now() / 100);
+  if (key !== boxKey){ boxKey = key; $('boxL').innerHTML = renderBox(); }
+  $('statusL').innerHTML = renderStatus();
+  $('labelsL').innerHTML = renderLabels();
+  $('fxL').innerHTML = renderFx();
+  $('insetL').innerHTML = renderInset();
+  $('phoneL').innerHTML = renderPhone();
+  $('pktL').innerHTML = renderPackets();
+  $('bannerL').innerHTML = renderBanner();
+  $('capL').innerHTML = renderCaption();
+}
+
+/* ---------- 音效（Web Audio，方波模擬被動蜂鳴器） ---------- */
+const AUDIO = {
+  ctx: null, osc: null, gain: null, cur: 0, muted: false,
+  init(){
+    if (this.ctx){ if (this.ctx.state === 'suspended') this.ctx.resume(); return; }
+    const AC = window.AudioContext || window.webkitAudioContext; if (!AC) return;
+    this.ctx = new AC();
+    this.osc = this.ctx.createOscillator(); this.osc.type = 'square';
+    const lp = this.ctx.createBiquadFilter(); lp.type = 'lowpass'; lp.frequency.value = 3200;
+    this.gain = this.ctx.createGain(); this.gain.gain.value = 0;
+    this.osc.connect(lp); lp.connect(this.gain); this.gain.connect(this.ctx.destination); this.osc.start();
+  },
+  set(fq){
+    if (!this.ctx || fq === this.cur) return;
+    this.cur = fq; const t = this.ctx.currentTime;
+    this.gain.gain.cancelScheduledValues(t);
+    if (fq > 0){ this.osc.frequency.setValueAtTime(fq, t); this.gain.gain.setTargetAtTime(0.05, t, 0.004); }
+    else this.gain.gain.setTargetAtTime(0, t, 0.006);
+  }
+};
+
+/* ---------- 主迴圈 ---------- */
+let last = performance.now(), pendingRestart = false, demoState = 'idle';
+function checkAutoLock(){
+  // 對應韌體主迴圈：if is_open and elapsed >= OPEN_TIME: lock_box()
+  if (G.autoLockAt != null && S.clock >= G.autoLockAt){ G.autoLockAt = null; DIR.lane('esp').push(lockSequence('auto')); }
+}
+function frame(now){
+  const dt = Math.min(64, now - last); last = now;
+  if (DIR.running){
+    const v = dt * DIR.speed;
+    S.clock += v; DIR.tick(v); checkAutoLock();
+    S.packets = S.packets.filter(p => S.clock - p.t0 < p.dur);
+    if (pendingRestart){ pendingRestart = false; startDemo(); }
+  }
+  S.xray += (S.xrayT - S.xray) * Math.min(1, dt / 180);
+  if (Math.abs(S.xrayT - S.xray) < 0.002) S.xray = S.xrayT;
+  render();
+  AUDIO.set(DIR.running && !AUDIO.muted ? S.buzz : 0);
+  updateLive();
+  requestAnimationFrame(frame);
+}
+
+/* ---------- UI ---------- */
+function resetAll(mode){
+  if (mode) MODE = mode;
+  DIR.reset(); S = initState(); G = initGame(); boxKey = '';
+  AUDIO.set(0);
+  DIR.running = MODE === 'manual';
+  demoState = 'idle';
+  $('svg').classList.toggle('manual', MODE === 'manual');
+  updateUI();
+}
+function startDemo(){
+  AUDIO.init();
+  resetAll('demo');
+  DIR.lane('script').push(buildScript($('script').value));
+  DIR.running = true; demoState = 'playing'; updateUI();
+}
+function togglePlay(){
+  if (MODE !== 'demo') return;
+  AUDIO.init();
+  if (demoState === 'idle' || demoState === 'ended') startDemo();
+  else if (demoState === 'playing'){ demoState = 'paused'; DIR.running = false; AUDIO.set(0); }
+  else { demoState = 'playing'; DIR.running = true; }
+  updateUI();
+}
+function updateUI(){
+  $('tabDemo').classList.toggle('on', MODE === 'demo');
+  $('tabMan').classList.toggle('on', MODE === 'manual');
+  $('demoPanel').classList.toggle('hidden', MODE !== 'demo');
+  $('manPanel').classList.toggle('hidden', MODE !== 'manual');
+  $('btnPlay').textContent = demoState === 'playing' ? '❚❚ 暫停' : demoState === 'paused' ? '▶ 繼續播放' : '▶ PLAY DEMO';
+  $('btnMute').textContent = AUDIO.muted ? '🔇 音效：關' : '🔊 音效：開';
+}
+let liveCache = {};
+function setText(id, txt, cls){
+  if (liveCache[id] === txt + cls) return; liveCache[id] = txt + cls;
+  const el = $(id); el.textContent = txt; if (cls != null) el.className = 'hint ' + cls;
+}
+function updateLive(){
+  const x = S.xrayT > 0.5 ? '剖面透視：開' : '剖面透視：關';
+  if ($('btnXray').textContent !== x) $('btnXray').textContent = x;
+  if (MODE !== 'manual') return;
+  const lidTxt = S.lid > 0.02 ? 'Close Lid' : 'Open Lid';
+  if ($('btnLid').textContent !== lidTxt) $('btnLid').textContent = lidTxt;
+  const busy = !DIR.lane('esp').idle || !DIR.lane('radio').idle;
+  const v = $('guessIn').value.trim();
+  let msg = 'Interactive Mode：ESP32 隨機產生四位不重複密碼', cls = '';
+  if (busy) msg = 'ESP32 動作中… 新指令會依序排隊執行';
+  else if (G.autoLockAt != null) msg = `盒蓋已開啟 · ${((G.autoLockAt - S.clock)/1000).toFixed(1)} 秒後自動上鎖`;
+  if (v){
+    if (!/^\d*$/.test(v)) { msg = '只能輸入數字（ESP32 會回傳 ERROR: NUMBERS ONLY）'; cls = 'err'; }
+    else if (v.length !== 4) { msg = '需輸入 4 位數字（ESP32 會回傳 ERROR: ENTER 4 DIGITS）'; cls = 'err'; }
+    else if (new Set(v).size !== 4) { msg = '數字不可重複（ESP32 會回傳 ERROR: DIGITS MUST BE UNIQUE）'; cls = 'err'; }
+    else { msg = '✓ 四個不重複數字，按 Guess 或 Enter 送出'; cls = 'ok'; }
+  }
+  setText('manHint', msg, cls);
+}
+let hintUntil = 0;
+function manualAct(act){
+  AUDIO.init();
+  const esp = DIR.lane('esp');
+  if (act === 'reset'){ resetAll('manual'); return; }
+  if (act === 'connect'){
+    if (S.ble !== 'off' || S._connQ) return;
+    S._connQ = true; esp.push(connectSteps(false)); return;
+  }
+  if (act === 'lid'){ esp.push(userLidToggle()); return; }
+  if (S.ble !== 'connected'){ S.capTitle = '尚未連線'; S.capSub = '請先按 Connect BLE，手機才能傳送指令'; banner('請先連線 BLE', '按下 Connect BLE 開始掃描', '#d0564b'); return; }
+  if (act === 'giveup'){ esp.push(giveUpSteps()); return; }
+  if (act === 'guess'){
+    const v = $('guessIn').value.trim();
+    if (!v){ banner('請輸入密碼', '四個不重複數字，例如 1234', '#d0564b'); return; }
+    esp.push(sendCommand('P' + v, 45)); $('guessIn').value = ''; return;
+  }
+  esp.push(sendCommand(act, 45));
+}
+
+$('tabDemo').onclick = () => { if (MODE !== 'demo') resetAll('demo'); };
+$('tabMan').onclick = () => { AUDIO.init(); if (MODE !== 'manual') resetAll('manual'); };
+$('btnPlay').onclick = togglePlay;
+$('btnReplay').onclick = () => startDemo();
+$('speed').onchange = e => { DIR.speed = parseFloat(e.target.value); };
+$('btnMute').onclick = () => { AUDIO.muted = !AUDIO.muted; AUDIO.set(0); updateUI(); };
+$('btnXray').onclick = () => { S.xrayT = S.xrayT > 0.5 ? 0 : 1; };
+$('btnHide').onclick = () => document.body.classList.toggle('clean');
+document.querySelectorAll('#manPanel [data-m]').forEach(b => b.onclick = () => manualAct(b.dataset.m));
+$('guessIn').addEventListener('keydown', e => { if (e.key === 'Enter') manualAct('guess'); });
+$('svg').addEventListener('click', e => {
+  const el = e.target.closest('[data-act]'); if (!el) return;
+  const act = el.getAttribute('data-act');
+  if (act === 'reveal'){ S.reveal = !S.reveal; return; }
+  if (MODE !== 'manual') return;
+  if (act === 'connect') manualAct('connect');
+  else if (act.startsWith('cmd:')) manualAct(act.slice(4));
+});
+document.addEventListener('keydown', e => {
+  if (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT') return;
+  if (e.code === 'Space'){ e.preventDefault(); togglePlay(); }
+  if (e.key === 'h' || e.key === 'H') document.body.classList.toggle('clean');
+});
+document.addEventListener('visibilitychange', () => {
+  if (document.hidden){
+    AUDIO.set(0);
+    if (MODE === 'demo' && demoState === 'playing'){ demoState = 'paused'; DIR.running = false; updateUI(); }
+    if (AUDIO.ctx) AUDIO.ctx.suspend();
+  } else if (AUDIO.ctx) AUDIO.ctx.resume();
+  last = performance.now();
+});
+
+resetAll('demo');
+requestAnimationFrame(frame);
+</script>
+</body>
+</html>
